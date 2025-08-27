@@ -1,6 +1,6 @@
-# PyTorch + Torchaudio GPU wheels (CUDA 12.1)
-torch==2.1.2+cu121
-torchaudio==2.1.2+cu121
+# PyTorch + Torchaudio GPU wheels (CUDA 12.1) — pinned to match Audiocraft 1.4.0a2
+torch==2.1.0+cu121
+torchaudio==2.1.0+cu121
 --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Hugging Face stack
@@ -11,8 +11,8 @@ einops>=0.7.0
 soundfile==0.12.1
 hf_transfer>=0.1.6
 
-# Audiocraft (MusicGen)
-git+https://github.com/facebookresearch/audiocraft.git@896ec7c47f5e5d1e5aa1e4b260c4405328bf009d
+# Audiocraft (MusicGen) — matches torch==2.1.0
+audiocraft==1.4.0a2
 
 # RunPod serverless runtime
 runpod>=1.6.0
