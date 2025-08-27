@@ -6,7 +6,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 
 WORKDIR /app
 
-# CUDA 12.1 wheels + nice envs
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu121
 ENV HF_HOME=/root/.cache/huggingface
