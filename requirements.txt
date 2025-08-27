@@ -1,0 +1,9 @@
+# Use prebuilt GPU wheels for CUDA 12.1 (compatible with RunPod GPUs)
+torch==2.1.2+cu121
+torchaudio==2.1.2+cu121
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+transformers
+git+https://github.com/facebookresearch/audiocraft.git
+soundfile
+runpod
