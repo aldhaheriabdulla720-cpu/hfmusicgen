@@ -1,10 +1,18 @@
-# CUDA 12.1 wheels (match the base image)
+# PyTorch + Torchaudio GPU wheels (CUDA 12.1)
 torch==2.1.2+cu121
 torchaudio==2.1.2+cu121
 --extra-index-url https://download.pytorch.org/whl/cu121
 
+# Hugging Face stack
 transformers==4.55.4
-# Pin audiocraft to a known-good commit to avoid upstream breakage
-git+https://github.com/facebookresearch/audiocraft.git@896ec7c47f5e5d1e5aa1e4b260c4405328bf009d
+accelerate>=0.27.0
+safetensors>=0.4.2
+einops>=0.7.0
 soundfile==0.12.1
-runpod==1.4.0
+hf_transfer>=0.1.6
+
+# Audiocraft (MusicGen)
+git+https://github.com/facebookresearch/audiocraft.git@896ec7c47f5e5d1e5aa1e4b260c4405328bf009d
+
+# RunPod serverless runtime
+runpod>=1.6.0
