@@ -18,18 +18,23 @@ if device == "cuda":
         pass
 
 _model = None
-SAMPLE_RATE = 32000  # will be updated after first load
+SAMPLE_RATE = 32000  # updated after first load
 
 def _ensure_model():
+    """
+    Lazy-load the MusicGen wrapper (not an nn.Module).
+    NOTE: Do NOT call .eval() here.
+    """
     global _model, SAMPLE_RATE
     if _model is None:
         m = MusicGen.get_pretrained(MODEL_NAME, device=device)
+        # best-effort half precision on GPU; harmless no-op otherwise
         if device == "cuda":
             try:
-                m = m.to(torch.float16)
+                m = m.to(torch.float16)  # some builds support this; wrapped in try/except
             except Exception:
                 pass
-        m.eval()
+        # DO NOT: m.eval()  <-- this caused the AttributeError
         _model = m
         SAMPLE_RATE = int(getattr(_model, "sample_rate", 32000))
 
@@ -40,7 +45,10 @@ def _to_mp3(wav_bytes: bytes, sr: int) -> bytes:
     out_path = os.path.join("/tmp", f"{uuid.uuid4().hex}.mp3")
     try:
         subprocess.run(
-            ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", in_path, "-vn", "-ar", str(sr), "-b:a", "192k", out_path],
+            [
+                "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                "-i", in_path, "-vn", "-ar", str(sr), "-b:a", "192k", out_path
+            ],
             check=True
         )
         with open(out_path, "rb") as f:
@@ -56,7 +64,7 @@ def _to_mp3(wav_bytes: bytes, sr: int) -> bytes:
 def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     inp = (event or {}).get("input", {}) or {}
 
-    # Instant readiness check path (no model load)
+    # quick health check (no model load)
     if inp.get("healthcheck") or inp.get("warmup"):
         return {"ok": True, "ready": True, "device": device, "model": MODEL_NAME}
 
@@ -69,6 +77,7 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     if duration > MAX_DURATION: duration = MAX_DURATION
     if fmt not in ("wav", "mp3"): fmt = "mp3"
 
+    # deterministic-ish seeding (best effort)
     try:
         torch.manual_seed(seed)
         if device == "cuda":
@@ -79,10 +88,17 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
         _ensure_model()
         _model.set_generation_params(duration=duration)
+        # Proper inference context instead of .eval()
         with torch.inference_mode():
             wav = _model.generate([prompt], progress=False)[0].cpu().numpy()
     except Exception as e:
-        return {"error": f"generation_failed: {e.__class__.__name__}: {e}", "model": MODEL_NAME, "prompt": prompt, "duration": duration, "format": fmt}
+        return {
+            "error": f"generation_failed: {e.__class__.__name__}: {e}",
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "duration": duration,
+            "format": fmt
+        }
 
     try:
         buf = io.BytesIO()
@@ -98,6 +114,7 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
             audio_bytes = _to_mp3(wav_bytes, SAMPLE_RATE)
             mime = "audio/mpeg"
         except Exception:
+            # graceful fallback to wav if ffmpeg/mp3 fails
             audio_bytes, mime = wav_bytes, "audio/wav"
 
     return {
