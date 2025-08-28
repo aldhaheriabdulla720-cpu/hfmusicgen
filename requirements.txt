@@ -1,3 +1,6 @@
+# Belt + suspenders: keep NumPy pinned here too
+numpy==1.25.2
+
 # PyTorch CUDA 12.1 wheels
 torch==2.1.0+cu121
 torchaudio==2.1.0+cu121
@@ -11,8 +14,6 @@ einops==0.7.0
 soundfile==0.12.1
 hf_transfer==0.1.6
 
-# Music model
+# Music model + RunPod runtime
 audiocraft==1.3.0
-
-# RunPod serverless
 runpod==1.7.0
